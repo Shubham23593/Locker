@@ -5,217 +5,266 @@ import Product from '../models/Product.js';
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { brand, category, search, sort, limit = 100 } = req.query;
+    console.log('📥 GET /api/products - Fetching all products');
 
-    // Build filter object
-    const filter = {};
+    const { search, category, brand, minPrice, maxPrice, sort } = req.query;
 
-    if (brand) {
-      filter.brand = brand;
-    }
+    // Build query
+    let query = { isActive: true };
 
-    if (category) {
-      filter.category = category;
-    }
-
+    // Search
     if (search) {
-      filter.name = { $regex: search, $options: 'i' };
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
     }
 
-    // Build sort object
+    // Category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // Brand filter
+    if (brand) {
+      query. brand = brand;
+    }
+
+    // Price filter
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    // Sorting
     let sortOption = {};
-    if (sort === 'price-asc') {
+    if (sort === 'price-low') {
       sortOption = { price: 1 };
-    } else if (sort === 'price-desc') {
+    } else if (sort === 'price-high') {
       sortOption = { price: -1 };
-    } else if (sort === 'name') {
+    } else if (sort === 'name-az') {
       sortOption = { name: 1 };
+    } else if (sort === 'name-za') {
+      sortOption = { name: -1 };
+    } else if (sort === 'newest') {
+      sortOption = { createdAt: -1 };
+    } else if (sort === 'rating') {
+      sortOption = { rating: -1 };
     } else {
       sortOption = { createdAt: -1 };
     }
 
-    const products = await Product.find(filter)
-      .sort(sortOption)
-      .limit(parseInt(limit));
+    const products = await Product.find(query). sort(sortOption);
 
-    console.log(`📦 Returning ${products.length} products`); // Debug log
+    console.log(`✅ Found ${products.length} products`);
 
     res.json({
       success: true,
-      count: products.length,
       data: products,
+      count: products.length,
     });
   } catch (error) {
-    console.error('Error in getProducts:', error);
-    res.status(500).json({ 
+    console. error('❌ Get products error:', error);
+    res.status(500).json({
       success: false,
-      message: error.message 
+      message: 'Failed to fetch products',
+      error: error.message,
     });
   }
 };
 
-// Keep all other exports the same...
+// @desc    Get product by ID
+// @route   GET /api/products/:id
+// @access  Public
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ productId: req.params.id });
+    console. log('📥 GET /api/products/:id - Fetching product:', req.params.id);
+
+    const product = await Product. findById(req.params.id);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      console.log('❌ Product not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
     }
+
+    console.log('✅ Product found:', product.name);
 
     res.json({
       success: true,
       data: product,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const getFeaturedProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ isFeatured: true }).limit(10);
-
-    res.json({
-      success: true,
-      count: products.length,
-      data: products,
+    console.error('❌ Get product by ID error:', error);
+    res. status(500).json({
+      success: false,
+      message: 'Failed to fetch product',
+      error: error.message,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
 };
 
-export const getBrands = async (req, res) => {
-  try {
-    const brands = await Product.distinct('brand');
-
-    res.json({
-      success: true,
-      count: brands.length,
-      data: brands,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
+// @desc    Create new product
+// @route   POST /api/products
+// @access  Private/Admin
 export const createProduct = async (req, res) => {
   try {
-    const {
-      productId,
-      name,
-      description,
-      price,
-      image,
-      brand,
-      category,
-      stock,
-    } = req.body;
+    console.log('📥 POST /api/products - Creating product');
 
-    const existingProduct = await Product.findOne({ productId });
-    if (existingProduct) {
-      return res.status(400).json({ message: 'Product already exists' });
-    }
+    const product = await Product.create(req.body);
 
-    const product = await Product.create({
-      productId,
-      name,
-      description,
-      price,
-      image,
-      brand,
-      category,
-      stock,
-    });
+    console.log('✅ Product created:', product.name);
 
-    res.status(201).json({
+    res.status(201). json({
       success: true,
       data: product,
+      message: 'Product created successfully',
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('❌ Create product error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create product',
+      error: error.message,
+    });
   }
 };
 
+// @desc    Update product
+// @route   PUT /api/products/:id
+// @access  Private/Admin
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findOne({ productId: req.params.id });
+    console.log('📥 PUT /api/products/:id - Updating product:', req.params.id);
 
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const updatedProduct = await Product.findOneAndUpdate(
-      { productId: req.params.id },
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
+    }
+
+    console.log('✅ Product updated:', product.name);
+
     res.json({
       success: true,
-      data: updatedProduct,
+      data: product,
+      message: 'Product updated successfully',
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('❌ Update product error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update product',
+      error: error. message,
+    });
   }
 };
 
+// @desc    Delete product
+// @route   DELETE /api/products/:id
+// @access  Private/Admin
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findOne({ productId: req.params.id });
+    console.log('📥 DELETE /api/products/:id - Deleting product:', req.params.id);
+
+    const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
     }
 
-    await Product.findOneAndDelete({ productId: req.params.id });
+    console.log('✅ Product deleted:', product.name);
 
     res.json({
       success: true,
       message: 'Product deleted successfully',
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('❌ Delete product error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete product',
+      error: error. message,
+    });
   }
 };
 
+// @desc    Get featured products
+// @route   GET /api/products/featured
+// @access  Public
+export const getFeaturedProducts = async (req, res) => {
+  try {
+    const products = await Product. find({ isFeatured: true, isActive: true })
+      .limit(8)
+      . sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error('Get featured products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch featured products',
+    });
+  }
+};
+
+// @desc    Get all brands
+// @route   GET /api/products/brands
+// @access  Public
+export const getBrands = async (req, res) => {
+  try {
+    const brands = await Product.distinct('brand');
+
+    res.json({
+      success: true,
+      data: brands,
+    });
+  } catch (error) {
+    console.error('Get brands error:', error);
+    res. status(500).json({
+      success: false,
+      message: 'Failed to fetch brands',
+    });
+  }
+};
+
+// @desc    Seed products
+// @route   POST /api/products/seed
+// @access  Public (for development)
 export const seedProducts = async (req, res) => {
   try {
     const { products } = req.body;
 
-    if (!products || !Array.isArray(products)) {
-      return res.status(400).json({ message: 'Invalid products data' });
-    }
+    await Product.deleteMany({});
+    const createdProducts = await Product.insertMany(products);
 
-    const createdProducts = await Product.insertMany(
-      products.map((p) => ({
-        productId: p.id.toString(),
-        name: p.name,
-        price: p.price,
-        image: p.image,
-        brand: p.brand,
-        category: p.category || 'Electronics',
-        description: p.description || '',
-        stock: p.stock || 100,
-      })),
-      { ordered: false }
-    );
-
-    res.status(201).json({
+    res.status(201). json({
       success: true,
-      count: createdProducts.length,
-      message: 'Products seeded successfully',
       data: createdProducts,
+      message: `${createdProducts.length} products seeded successfully`,
     });
   } catch (error) {
-    if (error.code === 11000) {
-      res.json({
-        success: true,
-        message: 'Some products already exist, others added successfully',
-      });
-    } else {
-      res.status(500).json({ message: error.message });
-    }
+    console.error('Seed products error:', error);
+    res. status(500).json({
+      success: false,
+      message: 'Failed to seed products',
+    });
   }
 };

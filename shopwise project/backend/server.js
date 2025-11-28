@@ -5,8 +5,10 @@ dotenv.config();
 // ✅ Verify env vars are loaded
 console.log('🔍 Environment Variables Check:');
 console.log('   PORT:', process.env.PORT || 'Not set');
-console.log('   NODE_ENV:', process.env.NODE_ENV || 'Not set');
+console.log('   NODE_ENV:', process.env. NODE_ENV || 'Not set');
+console.log('   JWT_SECRET:', process.env.JWT_SECRET ?  '✅ Loaded' : '❌ Missing');
 console.log('   HUGGINGFACE_API_KEY:', process.env.HUGGINGFACE_API_KEY ? '✅ Loaded' : '❌ Missing');
+console.log('   GEMINI_API_KEY:', process. env.GEMINI_API_KEY ? '✅ Loaded' : '❌ Missing');
 
 // Now import everything else
 import express from 'express';
@@ -23,11 +25,16 @@ import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/order.js';
 import productRoutes from './routes/product.js';
 import chatRoutes from './routes/chatRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Connect to database
 connectDB();
 
 const app = express();
+
+// ============================================
+// MIDDLEWARE - ORDER MATTERS!
+// ============================================
 
 // CORS Configuration
 app.use(cors({
@@ -42,7 +49,7 @@ app.use(cors({
 app.options('*', cors());
 
 // Security Middleware
-app.use(helmet({
+app. use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
@@ -54,34 +61,50 @@ if (process.env.NODE_ENV === 'development') {
 // Compression middleware
 app.use(compression());
 
-// Body parser middleware
+// ✅ Body parser middleware MUST come before routes
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express. urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// ============================================
+// RATE LIMITING (Disabled in Development)
+// ============================================
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Too many authentication attempts, please try again later.',
-  skipSuccessfulRequests: true,
-});
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
-const chatLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 30,
-  message: 'Too many messages, please slow down.',
-});
+const authLimiter = isDevelopment 
+  ? (req, res, next) => next() // ✅ No limit in development
+  : rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5, // 5 requests per windowMs
+      message: 'Too many authentication attempts, please try again later.',
+      skipSuccessfulRequests: true,
+    });
 
-// Apply general rate limiter to all API routes
-app.use('/api/', generalLimiter);
+const generalLimiter = isDevelopment
+  ? (req, res, next) => next() // ✅ No limit in development
+  : rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // 100 requests per windowMs
+      message: 'Too many requests from this IP, please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
+const chatLimiter = isDevelopment
+  ? (req, res, next) => next() // ✅ No limit in development
+  : rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 30, // 30 requests per windowMs
+      message: 'Too many messages, please slow down.',
+    });
+
+// Apply rate limiters
+if (process. env.NODE_ENV === 'production') {
+  app.use('/api/', generalLimiter);
+  console.log('✅ Rate limiting ENABLED (Production mode)');
+} else {
+  console.log('⚠️  Rate limiting DISABLED (Development mode)');
+}
 
 // ============================================
 // ROUTES
@@ -89,15 +112,16 @@ app.use('/api/', generalLimiter);
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
+app. use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatLimiter, chatRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ============================================
 // HEALTH & STATUS ENDPOINTS
 // ============================================
 
-app.get('/api/health', (req, res) => {
+app. get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy',
     message: 'ShopWise API is running',
@@ -109,7 +133,10 @@ app.get('/api/health', (req, res) => {
       database: 'connected',
       auth: 'active',
       chat: 'active',
+      admin: 'active',
+      rateLimiting: process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled',
       huggingface: process.env.HUGGINGFACE_API_KEY ? 'configured' : 'missing',
+      gemini: process.env.GEMINI_API_KEY ? 'configured' : 'missing',
     }
   });
 });
@@ -118,19 +145,27 @@ app.get('/api', (req, res) => {
   res.json({
     name: 'ShopWise E-commerce API',
     version: '1.0.0',
-    description: 'E-commerce platform with AI chatbot powered by Hugging Face AI',
+    description: 'E-commerce platform with AI chatbot',
     endpoints: {
       auth: '/api/auth',
       products: '/api/products',
       cart: '/api/cart',
       orders: '/api/orders',
       chat: '/api/chat',
+      admin: '/api/admin',
     },
     chatFeatures: [
       'Product recommendations',
       'Order tracking assistance',
       'Customer support',
       'Shipping & return info',
+    ],
+    adminFeatures: [
+      'Dashboard analytics',
+      'Order management',
+      'Product management',
+      'User management',
+      'Sales reports',
     ],
     status: 'operational',
   });
@@ -142,7 +177,8 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     features: [
       '🛒 E-commerce',
-      '🤖 AI Chatbot (Hugging Face)',
+      '🤖 AI Chatbot (Gemini AI)',
+      '👨‍💼 Admin Panel',
       '📦 Order Tracking',
       '💳 Secure Payments',
       '🚚 Shipping Management',
@@ -157,7 +193,7 @@ app.get('/', (req, res) => {
 
 // 404 Handler
 app.use((req, res, next) => {
-  res.status(404).json({ 
+  res. status(404).json({ 
     success: false,
     message: 'Route not found',
     path: req.originalUrl,
@@ -169,6 +205,7 @@ app.use((req, res, next) => {
       '/api/cart',
       '/api/orders',
       '/api/chat',
+      '/api/admin',
     ],
   });
 });
@@ -184,8 +221,8 @@ app.use((err, req, res, next) => {
   });
 
   // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => e.message);
+  if (err. name === 'ValidationError') {
+    const errors = Object.values(err. errors).map(e => e.message);
     return res.status(400).json({
       success: false,
       message: 'Validation Error',
@@ -196,7 +233,7 @@ app.use((err, req, res, next) => {
   // Mongoose duplicate key error
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    return res.status(400).json({
+    return res. status(400).json({
       success: false,
       message: `${field} already exists`,
     });
@@ -223,6 +260,15 @@ app.use((err, req, res, next) => {
       success: false,
       message: 'AI service temporarily unavailable',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
+  }
+
+  // Gemini API errors
+  if (err.message && err.message.includes('GEMINI')) {
+    return res. status(503).json({
+      success: false,
+      message: 'AI service temporarily unavailable',
+      details: process.env. NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 
@@ -255,18 +301,21 @@ const server = app.listen(PORT, () => {
   console.log(`   🔐 Auth:     /api/auth`);
   console.log(`   📦 Products: /api/products`);
   console.log(`   🛒 Cart:     /api/cart`);
-  console.log(`   📋 Orders:   /api/orders`);
-  console.log(`   🤖 Chat:     /api/chat (Hugging Face AI)`);
+  console. log(`   📋 Orders:   /api/orders`);
+  console.log(`   🤖 Chat:     /api/chat (Gemini AI)`);
+  console.log(`   👨‍💼 Admin:    /api/admin`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🔑 Services Status:');
-  console.log(`   Database:  ${process.env.MONGO_URI ? '✅ Connected' : '❌ Not configured'}`);
-  console.log(`   Hugging Face AI: ${process.env.HUGGINGFACE_API_KEY ? '✅ Configured' : '❌ API key missing'}`);
+  console.log(`   Database:      ${process.env. MONGO_URI ?  '✅ Connected' : '❌ Not configured'}`);
+  console.log(`   JWT Secret:    ${process.env.JWT_SECRET ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`   Gemini AI:     ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`   Rate Limiting: ${process.env.NODE_ENV === 'production' ? '✅ Enabled' : '⚠️  Disabled (Dev)'}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.log('❌ Unhandled Rejection:', err.message);
+  console.log('❌ Unhandled Rejection:', err. message);
   console.log('🔄 Shutting down server...');
   server.close(() => {
     console.log('✅ Server closed');
@@ -276,7 +325,7 @@ process.on('unhandledRejection', (err) => {
 
 // Handle SIGTERM
 process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM received. Shutting down gracefully...');
+  console.log('👋 SIGTERM received.  Shutting down gracefully...');
   server.close(() => {
     console.log('✅ Process terminated');
   });
@@ -284,7 +333,7 @@ process.on('SIGTERM', () => {
 
 // Handle SIGINT (Ctrl+C)
 process.on('SIGINT', () => {
-  console.log('\n👋 SIGINT received. Shutting down gracefully...');
+  console. log('\n👋 SIGINT received. Shutting down gracefully.. .');
   server.close(() => {
     console.log('✅ Server stopped');
     process.exit(0);

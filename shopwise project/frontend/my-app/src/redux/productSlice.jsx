@@ -9,14 +9,16 @@ const productSlice = createSlice({
   reducers: {
     setProducts(state, action) {
       state.products = action.payload;
+      console.log('✅ Redux: Products set -', action.payload. length, 'products');
     },
     setSearchTerm(state, action) {
       state.searchTerm = action.payload;
+      console.log('🔍 Redux: Search term set -', action.payload);
     },
-    // ✅ Add clearProducts action
-    clearProducts: (state) => {
+    clearProducts(state) {
       state.products = [];
       state.searchTerm = "";
+      console.log('🗑️ Redux: Products cleared');
     },
   },
 });

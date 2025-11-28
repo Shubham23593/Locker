@@ -15,6 +15,7 @@ import {
 import { addToCartAsync } from "../redux/cartSlice";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import { productAPI } from "../services/api";
 import ProductCard from "../components/ProductCard";
 
 const ProductDetail = () => {
@@ -24,19 +25,131 @@ const ProductDetail = () => {
   const { user } = useAuth();
   const { products } = useSelector((state) => state.product);
 
-  const product = products.find((p) => p.id === parseInt(id));
-
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [variants, setVariants] = useState([]);
 
-  // ✅ Generate variants based on current product
-  const variants = product ? [
-    { id: 1, name: "64GB", price: product.price, stock: 50 },
-    { id: 2, name: "128GB", price: product.price + 2000, stock: 30 },
-    { id: 3, name: "256GB", price: product.price + 5000, stock: 20 },
-  ] : [];
+  // ✅ CRITICAL FIX: Completely reset everything when ID changes
+  useEffect(() => {
+    console.log('🔄 === NEW PRODUCT ID ===', id);
+    
+    // 1. Clear everything immediately
+    setProduct(null);
+    setSelectedVariant(null);
+    setVariants([]);
+    setLoading(true);
+    setQuantity(1);
+    setIsWishlisted(false);
+    setActiveTab("description");
+    
+    // 2.  Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 3. Fetch new product
+    fetchProduct();
+    
+  }, [id, products]); // ✅ Watch BOTH id and products
+
+  // ✅ Fetch product function
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      
+      console.log('📦 Fetching product with ID:', id);
+      
+      // Check if it's a mock product
+      if (id. toString().startsWith('mock-')) {
+        console.log('🔍 Looking for mock product in store...');
+        
+        const foundProduct = products.find(p => 
+          p._id === id || 
+          p.id === parseInt(id. replace('mock-', '')) ||
+          `mock-${p.id}` === id
+        );
+        
+        if (foundProduct) {
+          console.log('✅ Found mock product:', foundProduct. name);
+          setProduct({ ...foundProduct });
+        } else {
+          console.error('❌ Mock product not found');
+          toast. error('Product not found');
+          navigate('/shop');
+        }
+      } else {
+        // MongoDB product
+        console.log('📡 Fetching from API...');
+        
+        try {
+          const response = await productAPI.getProductById(id);
+          
+          if (response.data.success) {
+            console.log('✅ API product found:', response.data.data. name);
+            setProduct({ ...response.data.data });
+          } else {
+            throw new Error('Product not found');
+          }
+        } catch (apiError) {
+          console.error('❌ API Error:', apiError);
+          
+          // Fallback to Redux
+          const foundProduct = products.find(p => 
+            p._id === id || p.id === id
+          );
+          
+          if (foundProduct) {
+            console.log('✅ Found in Redux:', foundProduct.name);
+            setProduct({ ...foundProduct });
+          } else {
+            toast.error('Product not found');
+            navigate('/shop');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+      toast.error('Failed to load product');
+      navigate('/shop');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Generate variants when product changes
+  useEffect(() => {
+    if (product) {
+      console.log('🔧 Generating variants for:', product. name);
+      
+      const newVariants = [
+        { 
+          id: 1, 
+          name: "64GB", 
+          price: product.price, 
+          stock: product. stock || 50 
+        },
+        { 
+          id: 2, 
+          name: "128GB", 
+          price: product.price + 2000, 
+          stock: Math.max(0, (product.stock || 50) - 20) 
+        },
+        { 
+          id: 3, 
+          name: "256GB", 
+          price: product.price + 5000, 
+          stock: Math.max(0, (product.stock || 50) - 30) 
+        },
+      ];
+      
+      setVariants(newVariants);
+      setSelectedVariant(newVariants[0]);
+      
+      console.log('✅ Variants set:', newVariants[0].name);
+    }
+  }, [product]);
 
   const reviews = [
     {
@@ -44,7 +157,7 @@ const ProductDetail = () => {
       user: "John Doe",
       rating: 5,
       date: "2024-01-15",
-      comment: "Excellent product! Highly recommended. The quality is amazing and delivery was fast.",
+      comment: "Excellent product! Highly recommended.  The quality is amazing and delivery was fast.",
       verified: true,
     },
     {
@@ -52,7 +165,7 @@ const ProductDetail = () => {
       user: "Jane Smith",
       rating: 4,
       date: "2024-01-10",
-      comment: "Good quality product. Value for money. Minor issues with packaging but product is great.",
+      comment: "Good quality product. Value for money.  Minor issues with packaging but product is great.",
       verified: true,
     },
     {
@@ -60,40 +173,23 @@ const ProductDetail = () => {
       user: "Mike Johnson",
       rating: 5,
       date: "2024-01-05",
-      comment: "Best purchase ever! Exceeded my expectations. Will definitely buy again.",
+      comment: "Best purchase ever!  Exceeded my expectations. Will definitely buy again.",
       verified: false,
     },
   ];
 
-  const relatedProducts = product ? products
-    .filter((p) => p.brand === product.brand && p.id !== product.id)
-    .slice(0, 4) : [];
-
-  // ✅ CRITICAL: Reset all state when product ID changes
-  useEffect(() => {
-    console.log('🔄 Product ID changed:', id);
+  // ✅ Related products
+  const relatedProducts = React.useMemo(() => {
+    if (!product) return [];
     
-    // Reset all state
-    setQuantity(1);
-    setSelectedVariant(null);
-    setIsWishlisted(false);
-    setActiveTab("description");
-    
-    // Scroll to top
-    window.scrollTo(0, 0);
-
-    // Set default variant after reset
-    if (variants.length > 0) {
-      console.log('✅ Setting default variant:', variants[0]);
-      setSelectedVariant(variants[0]);
-    }
-
-    // Check if product exists
-    if (!product) {
-      toast.error("Product not found");
-      navigate("/shop");
-    }
-  }, [id, product]); // ✅ Trigger when ID or product changes
+    return products
+      .filter((p) => {
+        const sameBrand = p.brand === product.brand;
+        const differentId = p._id !== product._id && p.id !== product.id;
+        return sameBrand && differentId;
+      })
+      .slice(0, 4);
+  }, [product, products]);
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -109,17 +205,16 @@ const ProductDetail = () => {
     try {
       const productWithVariant = {
         ...product,
-        id: product.id,
+        _id: product._id || product.id,
+        id: product.id || product._id,
         name: `${product.name} (${selectedVariant.name})`,
-        price: selectedVariant.price,
+        price: selectedVariant. price,
         variant: selectedVariant.name,
         variantId: selectedVariant.id,
         quantity: quantity,
       };
 
-      console.log('🛒 Adding to cart:', productWithVariant);
-
-      await dispatch(addToCartAsync(productWithVariant)).unwrap();
+      await dispatch(addToCartAsync(productWithVariant)). unwrap();
       toast.success(`${selectedVariant.name} added to cart successfully!`);
     } catch (error) {
       toast.error(error || "Failed to add product to cart");
@@ -140,7 +235,8 @@ const ProductDetail = () => {
     try {
       const productWithVariant = {
         ...product,
-        id: product.id,
+        _id: product._id || product. id,
+        id: product. id || product._id,
         name: `${product.name} (${selectedVariant.name})`,
         price: selectedVariant.price,
         variant: selectedVariant.name,
@@ -157,10 +253,10 @@ const ProductDetail = () => {
 
   const handleWishlist = () => {
     if (!user) {
-      toast.error("Please login to add to wishlist");
+      toast. error("Please login to add to wishlist");
       return;
     }
-    setIsWishlisted(!isWishlisted);
+    setIsWishlisted(! isWishlisted);
     toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
   };
 
@@ -169,36 +265,60 @@ const ProductDetail = () => {
       navigator.share({
         title: product.name,
         text: `Check out ${product.name} on ShopWise`,
-        url: window.location.href,
+        url: window.location. href,
       });
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
+      navigator.clipboard.writeText(window. location.href);
+      toast. success("Link copied to clipboard!");
     }
   };
 
-  // ✅ Show loading while product changes
-  if (!product) {
+  // ✅ Loading state
+  if (loading) {
     return (
-      <div className="container mx-auto py-12 flex justify-center min-h-[60vh] items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B2F2F]"></div>
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-12 flex justify-center items-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#3B2F2F] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading product... </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // ✅ Show loading while variant is being set
+  // ✅ No product found
+  if (!product) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-12 flex justify-center items-center min-h-[60vh]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
+            <button
+              onClick={() => navigate('/shop')}
+              className="bg-[#3B2F2F] text-white px-6 py-2 rounded-lg hover:bg-red-700"
+            >
+              Back to Shop
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ No variant selected yet
   if (!selectedVariant) {
     return (
-      <div className="container mx-auto py-12 flex justify-center min-h-[60vh] items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B2F2F]"></div>
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-12 flex justify-center items-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B2F2F]"></div>
+        </div>
       </div>
     );
   }
 
   const currentPrice = selectedVariant.price;
   const averageRating = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
-
-  console.log('📊 Current product:', product.name, 'Price:', currentPrice);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -233,8 +353,8 @@ const ProductDetail = () => {
 
               {/* Stock Badge */}
               <div className="absolute top-4 left-4">
-                {selectedVariant.stock > 0 ? (
-                  <span className="bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                {selectedVariant.stock > 0 ?  (
+                  <span className="bg-green-500 text-white px-3 py-1. 5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                     <FaCheck className="text-xs" /> {selectedVariant.stock} In Stock
                   </span>
                 ) : (
@@ -248,10 +368,10 @@ const ProductDetail = () => {
               <div className="absolute top-4 right-4 flex gap-2">
                 <button
                   onClick={handleWishlist}
-                  className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white transition"
+                  className="bg-white/95 backdrop-blur-sm p-2. 5 rounded-full shadow-lg hover:bg-white transition"
                   title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  {isWishlisted ? (
+                  {isWishlisted ?  (
                     <FaHeart className="text-red-500 text-lg" />
                   ) : (
                     <FaRegHeart className="text-gray-600 text-lg" />
@@ -282,7 +402,7 @@ const ProductDetail = () => {
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-              {product.name}
+              {product. name}
             </h1>
 
             <div className="flex items-center gap-4">
@@ -303,7 +423,7 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            {/* Price - Shows current product price */}
+            {/* Price */}
             <div className="flex items-baseline gap-3">
               <span className="text-3xl sm:text-4xl font-bold text-[#3B2F2F]">
                 ₹{currentPrice.toLocaleString("en-IN")}
@@ -321,7 +441,7 @@ const ProductDetail = () => {
               <h3 className="font-semibold text-gray-900 mb-3 text-lg">
                 Select Storage: 
                 <span className="ml-2 text-[#3B2F2F]">
-                  ({selectedVariant.name} - ₹{selectedVariant.price.toLocaleString("en-IN")})
+                  ({selectedVariant.name} - ₹{selectedVariant.price. toLocaleString("en-IN")})
                 </span>
               </h3>
               <div className="flex flex-wrap gap-3">
@@ -329,13 +449,13 @@ const ProductDetail = () => {
                   <button
                     key={variant.id}
                     onClick={() => {
-                      console.log('🔄 Variant changed:', variant.name, variant.price);
+                      console.log('🔄 Variant changed:', variant.name);
                       setSelectedVariant(variant);
                     }}
                     disabled={variant.stock === 0}
                     className={`px-5 py-3 border-2 rounded-xl font-semibold transition relative ${
                       selectedVariant.id === variant.id
-                        ? "border-[#3B2F2F] bg-[#3B2F2F] text-white shadow-md scale-105"
+                        ?  "border-[#3B2F2F] bg-[#3B2F2F] text-white shadow-md scale-105"
                         : variant.stock === 0
                         ? "border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed"
                         : "border-gray-300 hover:border-[#3B2F2F] hover:shadow-md"
@@ -431,7 +551,7 @@ const ProductDetail = () => {
         {/* Tabs Section */}
         <div className="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="flex border-b overflow-x-auto">
-            {["description", "reviews"].map((tab) => (
+            {["description", "reviews"]. map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -451,9 +571,9 @@ const ProductDetail = () => {
               <div className="prose max-w-none">
                 <h3 className="text-xl font-bold mb-4">Product Description</h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Experience the next generation of smartphones with the {product.name}. 
+                  {product.description || `Experience the next generation of smartphones with the ${product.name}. 
                   This device combines cutting-edge technology with elegant design to deliver 
-                  an unparalleled user experience.
+                  an unparalleled user experience.`}
                 </p>
                 <h4 className="text-lg font-semibold mt-6 mb-3">Key Features:</h4>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
@@ -483,7 +603,7 @@ const ProductDetail = () => {
                             key={i}
                             className={
                               i < Math.round(averageRating)
-                                ? "text-yellow-500"
+                                ?  "text-yellow-500"
                                 : "text-gray-300"
                             }
                           />
@@ -539,7 +659,9 @@ const ProductDetail = () => {
             <h2 className="text-2xl font-bold mb-6">Related Products</h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                <div key={relatedProduct._id || relatedProduct.id}>
+                  <ProductCard product={relatedProduct} />
+                </div>
               ))}
             </div>
           </div>

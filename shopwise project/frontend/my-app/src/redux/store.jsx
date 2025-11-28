@@ -9,10 +9,12 @@ const store = configureStore({
   },
 });
 
-// ✅ Add logout handler to clear all Redux state
+// ✅ Logout handler to clear all Redux state
 export const logoutAndClearStore = () => {
+  console.log('🔴 Logging out - clearing Redux store');
   store.dispatch(clearCart());
   store.dispatch(clearProducts());
+  console.log('✅ Redux store cleared');
 };
 
 export default store;

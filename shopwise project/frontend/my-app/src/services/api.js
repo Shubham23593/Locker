@@ -10,49 +10,45 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15 seconds timeout
-  withCredentials: false, // Changed to false unless you need CORS credentials
+  timeout: 15000,
+  withCredentials: false,
 });
 
 // Add token to requests
-api.interceptors.request.use(
+api.interceptors. request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('📤 API Request:', config.method.toUpperCase(), config.url);
+    console.log('📤 API Request:', config.method. toUpperCase(), config.url);
     return config;
   },
   (error) => {
     console.error('❌ Request Error:', error);
-    return Promise.reject(error);
+    return Promise. reject(error);
   }
 );
 
-// Add response interceptor for debugging and error handling
+// Add response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', response.config.url, response.status);
+    console.log('✅ API Response:', response.config. url, response.status);
     return response;
   },
   (error) => {
     const errorDetails = {
       url: error.config?.url,
-      status: error.response?.status,
+      status: error.response?. status,
       message: error.response?.data?.message || error.message,
       errors: error.response?.data?.errors || null,
     };
     
     console.error('❌ API Error:', errorDetails);
 
-    // Handle specific error cases
     if (error.response?.status === 401) {
-      // Unauthorized - token expired or invalid
       console.warn('🔐 Unauthorized - clearing token');
       localStorage.removeItem('token');
-      // Optionally redirect to login
-      // window.location.href = '/auth';
     }
 
     if (error.response?.status === 403) {
@@ -64,10 +60,10 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status >= 500) {
-      console.error('🔥 Server Error:', error.response?.status);
+      console. error('🔥 Server Error:', error. response?.status);
     }
 
-    return Promise.reject(error);
+    return Promise. reject(error);
   }
 );
 
@@ -89,13 +85,13 @@ export const cartAPI = {
   clearCart: () => api.delete('/cart'),
 };
 
-// Order API - Enhanced with proper response handling
+// Order API
 export const orderAPI = {
   createOrder: async (data) => {
     try {
       const response = await api.post('/orders', data);
       console.log('📦 Order created:', response.data);
-      return response; // Return full response
+      return response;
     } catch (error) {
       console.error('❌ Create order failed:', error.response?.data);
       throw error;
@@ -106,7 +102,7 @@ export const orderAPI = {
       const response = await api.get('/orders');
       return response;
     } catch (error) {
-      console.error('❌ Get orders failed:', error.response?.data);
+      console.error('❌ Get orders failed:', error. response?.data);
       throw error;
     }
   },
@@ -115,7 +111,7 @@ export const orderAPI = {
       const response = await api.get(`/orders/${id}`);
       return response;
     } catch (error) {
-      console.error('❌ Get order by ID failed:', error.response?.data);
+      console. error('❌ Get order by ID failed:', error.response?.data);
       throw error;
     }
   },
@@ -123,8 +119,22 @@ export const orderAPI = {
 
 // Product API
 export const productAPI = {
+  // ✅ NEW: Method for Shop.jsx
+  getAllProducts: async () => {
+    try {
+      console.log('📡 Fetching all products...');
+      const response = await api. get('/products');
+      console. log('✅ Products fetched:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ Error fetching products:', error);
+      throw error;
+    }
+  },
+
+  // Existing methods
   getProducts: (params) => api.get('/products', { params }),
-  getProductById: (id) => api.get(`/products/${id}`),
+  getProductById: (id) => api. get(`/products/${id}`),
   getFeaturedProducts: () => api.get('/products/featured'),
   getBrands: () => api.get('/products/brands'),
   getProductsByCategory: (category) => api.get('/products', { params: { category } }),
@@ -137,7 +147,7 @@ export const productAPI = {
   deleteProduct: (id) => api.delete(`/products/${id}`),
 };
 
-// Chat API (if you added chatbot)
+// Chat API
 export const chatAPI = {
   createSession: () => api.post('/chat/session'),
   sendMessage: (sessionId, message) => api.post('/chat/message', { sessionId, message }),
@@ -147,14 +157,13 @@ export const chatAPI = {
 
 // Helper function to extract data from response
 export const extractData = (response) => {
-  // Handle different response structures
-  if (response.data?.success && response.data?.data) {
-    return response.data.data; // Backend returns { success: true, data: {...} }
+  if (response.data?. success && response.data?.data) {
+    return response.data.data;
   }
   if (response.data?.data) {
     return response.data.data;
   }
-  return response.data; // Fallback to raw data
+  return response.data;
 };
 
 // Helper function to handle API errors
@@ -162,8 +171,8 @@ export const handleAPIError = (error, defaultMessage = 'An error occurred') => {
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
-  if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-    return error.response.data.errors.map(e => e.msg || e.message).join(', ');
+  if (error.response?.data?.errors && Array.isArray(error.response. data.errors)) {
+    return error.response.data.errors. map(e => e.msg || e.message).join(', ');
   }
   if (error.message) {
     return error.message;

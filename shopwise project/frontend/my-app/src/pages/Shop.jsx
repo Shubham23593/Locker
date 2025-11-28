@@ -1,19 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
+import { setProducts } from "../redux/productSlice";
+import { productAPI } from "../services/api";
+import { enhancedMockData } from "../assets/mockData";
+ // ✅ Import mockData
+
 import { 
   FaFilter, 
   FaTimes, 
   FaSlidersH,
   FaThLarge,
   FaThList,
-  FaStar
+  FaStar,
+  FaSync
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const Shop = () => {
+  const dispatch = useDispatch();
   const { products, searchTerm } = useSelector((state) => state.product);
-  const navigate = useNavigate(); // ✅ Initialize navigate
+  const navigate = useNavigate();
+
+  // Loading States
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Filter States
   const [priceRange, setPriceRange] = useState([0, 200000]);
@@ -24,26 +36,103 @@ const Shop = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Fetch products on mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // ✅ NEW: Fetch products function (merges mockData + MongoDB)
+ // ✅ UPDATED: Fetch products function (merges mockData + MongoDB with proper IDs)
+const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    
+    const response = await productAPI.getAllProducts();
+    let allProducts = [];
+    
+    if (response.data.success) {
+      const dbProducts = response.data.data || [];
+      
+      // Filter out mockData products that are already in database (by name)
+      const dbProductNames = new Set(dbProducts.map(p => p.name));
+      const uniqueMockData = enhancedMockData.filter(mock => !dbProductNames.has(mock.name));
+      
+      // ✅ Add proper IDs to mockData products
+      const mockDataWithIds = uniqueMockData.map((product, index) => ({
+        ...product,
+        _id: `mock-${product.id || index}`,
+        id: product.id || index,
+        isMockProduct: true
+      }));
+      
+      // Combine: mockData + database products
+      allProducts = [...mockDataWithIds, ...dbProducts];
+      
+      console.log(`✅ Loaded ${mockDataWithIds.length} mock + ${dbProducts.length} database = ${allProducts.length} total products`);
+    } else {
+      // If API fails, use mockData only
+      const mockDataWithIds = enhancedMockData.map((product, index) => ({
+        ...product,
+        _id: `mock-${product.id || index}`,
+        id: product.id || index,
+        isMockProduct: true
+      }));
+      allProducts = mockDataWithIds;
+      console.log('⚠️ Using mockData only (API failed)');
+    }
+    
+    dispatch(setProducts(allProducts));
+    
+    if (allProducts.length === 0) {
+      toast.info('No products found');
+    }
+  } catch (error) {
+    console.error('❌ Error fetching products:', error);
+    
+    // Fallback to mockData if API fails
+    const mockDataWithIds = enhancedMockData.map((product, index) => ({
+      ...product,
+      _id: `mock-${product.id || index}`,
+      id: product.id || index,
+      isMockProduct: true
+    }));
+    dispatch(setProducts(mockDataWithIds));
+    toast.warning('Loaded demo products (offline mode)');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Manual refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+    toast.success('Products refreshed! ');
+  };
+
   // Get unique brands from products
-  const brands = [...new Set(products.map((p) => p.brand))].filter(Boolean);
+  const brands = [...new Set(products.map((p) => p.brand))]. filter(Boolean);
 
   // Get price range from products
-  const maxPrice = Math.max(...products.map((p) => p.price || 0));
-  const minPrice = Math.min(...products.map((p) => p.price || 0));
+  const maxPrice = products.length > 0 ? Math.max(...products.map((p) => p.price || 0)) : 200000;
+  const minPrice = products.length > 0 ?  Math.min(...products.map((p) => p.price || 0)) : 0;
 
   // Initialize price range
   useEffect(() => {
-    setPriceRange([minPrice, maxPrice]);
-  }, [products]);
+    if (products.length > 0) {
+      setPriceRange([minPrice, maxPrice]);
+    }
+  }, [products, minPrice, maxPrice]);
 
   // Filter Products
   const getFilteredProducts = () => {
-    let filtered = [...products];
+    let filtered = [... products];
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter((product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      filtered = filtered. filter((product) =>
+        product.name?. toLowerCase().includes(searchTerm. toLowerCase()) ||
         product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -64,12 +153,12 @@ const Shop = () => {
     // Rating filter
     if (selectedRatings.length > 0) {
       const minRating = Math.min(...selectedRatings);
-      filtered = filtered;
+      filtered = filtered.filter(product => (product.rating || 0) >= minRating);
     }
 
     // Stock filter
     if (showInStockOnly) {
-      filtered = filtered;
+      filtered = filtered.filter(product => (product.stock || 0) > 0);
     }
 
     return filtered;
@@ -81,24 +170,25 @@ const Shop = () => {
 
     switch (sortBy) {
       case "price-low":
-        sorted.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
         break;
       case "price-high":
-        sorted.sort((a, b) => b.price - a.price);
+        sorted. sort((a, b) => (b.price || 0) - (a.price || 0));
         break;
       case "name-az":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         break;
       case "name-za":
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
         break;
       case "newest":
-        sorted.reverse();
+        sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a. createdAt || 0));
         break;
       case "popular":
-        sorted.sort((a, b) => a.id - b.id);
+        sorted.sort((a, b) => (b.numReviews || 0) - (a.numReviews || 0));
         break;
       case "rating":
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       default:
         break;
@@ -135,7 +225,7 @@ const Shop = () => {
   const toggleBrand = (brand) => {
     setSelectedBrands((prev) =>
       prev.includes(brand)
-        ? prev.filter((b) => b !== brand)
+        ? prev. filter((b) => b !== brand)
         : [...prev, brand]
     );
   };
@@ -143,16 +233,32 @@ const Shop = () => {
   // Toggle rating selection
   const toggleRating = (rating) => {
     setSelectedRatings((prev) =>
-      prev.includes(rating)
+      prev. includes(rating)
         ? prev.filter((r) => r !== rating)
         : [...prev, rating]
     );
   };
 
-  // ✅ Navigate to product detail page
+  // Navigate to product detail page
   const handleViewProduct = (productId) => {
     navigate(`/product/${productId}`);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-6 sm:py-8 px-4 md:px-8 lg:px-16 xl:px-24">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#3B2F2F] mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading products...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -170,6 +276,17 @@ const Shop = () => {
 
           {/* Desktop View Toggle & Sort */}
           <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="bg-[#3B2F2F] text-white px-3 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+              title="Refresh Products"
+            >
+              <FaSync className={refreshing ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+
             {/* View Mode Toggle */}
             <div className="hidden md:flex bg-white border rounded-lg p-1">
               <button
@@ -223,7 +340,7 @@ const Shop = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
+          {/* Filters Sidebar - Keep your existing code */}
           <div
             className={`${
               showMobileFilters ? "block" : "hidden"
@@ -237,8 +354,9 @@ const Shop = () => {
               />
             )}
 
-            {/* Filter Panel */}
+            {/* Filter Panel - Keep all your existing filter code */}
             <div className="md:sticky md:top-20 bg-white rounded-xl shadow-lg p-6 h-fit relative md:relative max-h-screen overflow-y-auto md:max-h-[calc(100vh-100px)] ml-auto md:ml-0 max-w-sm md:max-w-none w-4/5 md:w-full">
+              {/* Your existing filter code here */}
               {/* Mobile Close Button */}
               <button
                 onClick={() => setShowMobileFilters(false)}
@@ -281,7 +399,7 @@ const Shop = () => {
                   />
                   <div className="flex justify-between items-center text-sm">
                     <span className="bg-gray-100 px-3 py-1 rounded">
-                      ₹{priceRange[0].toLocaleString("en-IN")}
+                      ₹{priceRange[0]. toLocaleString("en-IN")}
                     </span>
                     <span className="text-gray-500">to</span>
                     <span className="bg-gray-100 px-3 py-1 rounded">
@@ -295,23 +413,27 @@ const Shop = () => {
               <div className="mb-6 pb-6 border-b">
                 <h3 className="font-semibold text-gray-900 mb-3">Brands</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {brands.map((brand) => (
-                    <label
-                      key={brand}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedBrands.includes(brand)}
-                        onChange={() => toggleBrand(brand)}
-                        className="w-4 h-4 rounded border-gray-300 text-[#3B2F2F] focus:ring-[#3B2F2F]"
-                      />
-                      <span className="text-sm text-gray-700">{brand}</span>
-                      <span className="ml-auto text-xs text-gray-500">
-                        ({products.filter((p) => p.brand === brand).length})
-                      </span>
-                    </label>
-                  ))}
+                  {brands.length === 0 ? (
+                    <p className="text-sm text-gray-500">No brands available</p>
+                  ) : (
+                    brands.map((brand) => (
+                      <label
+                        key={brand}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedBrands.includes(brand)}
+                          onChange={() => toggleBrand(brand)}
+                          className="w-4 h-4 rounded border-gray-300 text-[#3B2F2F] focus:ring-[#3B2F2F]"
+                        />
+                        <span className="text-sm text-gray-700">{brand}</span>
+                        <span className="ml-auto text-xs text-gray-500">
+                          ({products.filter((p) => p.brand === brand).length})
+                        </span>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -333,7 +455,7 @@ const Shop = () => {
                         className="w-4 h-4 rounded border-gray-300 text-[#3B2F2F] focus:ring-[#3B2F2F]"
                       />
                       <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
+                        {[... Array(5)].map((_, i) => (
                           <FaStar
                             key={i}
                             className={
@@ -439,20 +561,19 @@ const Shop = () => {
               >
                 {sortedProducts.map((product) =>
                   viewMode === "grid" ? (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard key={product._id || product.id} product={product} />
                   ) : (
-                    // ✅ List View with proper navigation
                     <div
-                      key={product.id}
+                      key={product._id || product.id}
                       className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition flex gap-4 cursor-pointer"
-                      onClick={() => handleViewProduct(product.id)}
+                      onClick={() => handleViewProduct(product._id || product.id)}
                     >
                       <img
                         src={product.image}
                         alt={product.name}
                         className="w-24 h-24 object-contain"
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/100?text=No+Image';
+                          e.target.src = 'https://via.placeholder.com/100? text=No+Image';
                         }}
                       />
                       <div className="flex-1">
@@ -466,18 +587,18 @@ const Shop = () => {
                           {[...Array(5)].map((_, i) => (
                             <FaStar
                               key={i}
-                              className="text-yellow-500 text-xs"
+                              className={i < (product.rating || 0) ?  "text-yellow-500 text-xs" : "text-gray-300 text-xs"}
                             />
                           ))}
                         </div>
                         <p className="text-[#3B2F2F] text-xl font-bold">
-                          ₹{product.price?.toLocaleString("en-IN")}
+                          ₹{product.price?. toLocaleString("en-IN")}
                         </p>
                       </div>
                       <button
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewProduct(product.id);
+                          e. stopPropagation();
+                          handleViewProduct(product._id || product.id);
                         }}
                         className="bg-[#3B2F2F] text-white px-6 py-2 rounded-lg hover:bg-red-700 transition h-fit self-center"
                       >

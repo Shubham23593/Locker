@@ -1,11 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { authAPI } from '../services/api';
+import { fetchCart, clearCart } from '../redux/cartSlice';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     checkAuth();
@@ -14,12 +17,18 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('token');
-      console.log('🔍 Checking auth, token:', token ? 'exists' : 'none');
+      console.log('🔍 Checking auth, token:', token ?  'exists' : 'none');
       
       if (token) {
         const { data } = await authAPI.getProfile();
         console.log('✅ Profile fetched:', data);
-        setUser(data.data || data.user);
+        const userData = data.data || data. user;
+        setUser(userData);
+        
+        // ✅ Fetch cart after authentication
+        console.log('🛒 Fetching cart on mount.. .');
+        await dispatch(fetchCart()). unwrap();
+        console.log('✅ Cart loaded successfully');
       }
     } catch (error) {
       console.error('❌ Auth check failed:', error);
@@ -34,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔐 Attempting login:', email);
       const { data } = await authAPI.login({ email, password });
-      console.log('📦 Login response:', data);
+      console. log('📦 Login response:', data);
       
       // Store token
       if (data.token) {
@@ -43,9 +52,14 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Set user
-      const userData = data.data || data.user;
+      const userData = data.data || data. user;
       setUser(userData);
       console.log('✅ User set:', userData);
+      
+      // ✅ Fetch cart immediately after login
+      console.log('🛒 Fetching cart after login...');
+      await dispatch(fetchCart()).unwrap();
+      console.log('✅ Cart loaded after login');
       
       return data;
     } catch (error) {
@@ -58,11 +72,11 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('📝 Attempting register:', email);
       const { data } = await authAPI.register({ name, email, password });
-      console.log('📦 Register response:', data);
+      console. log('📦 Register response:', data);
       
       // Store token
       if (data.token) {
-        localStorage.setItem('token', data.token);
+        localStorage. setItem('token', data.token);
         console.log('✅ Token stored:', data.token);
       }
       
@@ -70,6 +84,11 @@ export const AuthProvider = ({ children }) => {
       const userData = data.data || data.user;
       setUser(userData);
       console.log('✅ User set:', userData);
+      
+      // ✅ Fetch cart after registration
+      console.log('🛒 Fetching cart after registration...');
+      await dispatch(fetchCart()).unwrap();
+      console.log('✅ Cart loaded after registration');
       
       return data;
     } catch (error) {
@@ -79,7 +98,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log('👋 Logging out...');
+    console.log('👋 Logging out.. .');
+    
+    // Clear cart from Redux
+    dispatch(clearCart());
     
     // Clear all localStorage data
     localStorage.clear();
