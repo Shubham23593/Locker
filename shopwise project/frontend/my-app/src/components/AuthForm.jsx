@@ -136,7 +136,7 @@ const AuthForm = ({ closeModal }) => {
   };
 
   return (
-    <div className="flex items-center justify-center p-2 sm:p-4">
+    <div className="flex items-center justify-center ">
       <div className="bg-white shadow-2xl rounded-xl sm:rounded-2xl overflow-hidden w-full max-w-5xl flex flex-col md:flex-row relative">
         
         {/* Mobile Close Button */}

@@ -4,9 +4,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { adminAPIService } from '../../services/adminAPI';
 import { toast } from 'react-toastify';
 import {
-  FaSearch,
   FaFilter,
-  FaEye,
   FaDownload,
   FaSort,
   FaChevronLeft,
@@ -20,7 +18,6 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: 'all',
-    search: '',
     page: 1,
     limit: 20,
     sortBy: 'createdAt',
@@ -45,11 +42,11 @@ const AdminOrders = () => {
       setLoading(true);
       const response = await adminAPIService.getAllOrders(filters);
       console.log('📦 Orders fetched:', response.data);
-      setOrders(response.data.data || []);
+      setOrders(response.data. data || []);
       setPagination({
         currentPage: response.data.currentPage,
         totalPages: response.data.totalPages,
-        total: response.data.total,
+        total: response.data. total,
       });
     } catch (error) {
       console.error('❌ Failed to fetch orders:', error);
@@ -71,29 +68,29 @@ const AdminOrders = () => {
   };
 
   const handlePageChange = (newPage) => {
-    setFilters({ ...filters, page: newPage });
+    setFilters({ ... filters, page: newPage });
   };
 
   const exportOrders = () => {
     const csvContent = [
       ['Order ID', 'Customer', 'Items', 'Total', 'Status', 'Date'],
-      ...orders.map((order) => [
+      ... orders.map((order) => [
         order._id,
         order.userId?.name || 'N/A',
-        order.items.length,
-        order.totalAmount,
+        order. items.length,
+        order. totalAmount,
         order.status,
         new Date(order.createdAt).toLocaleDateString(),
       ]),
     ]
-      .map((row) => row.join(','))
+      . map((row) => row.join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const url = window. URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `orders_${new Date(). toISOString().split('T')[0]}.csv`;
     a.click();
     toast.success('Orders exported successfully');
   };
@@ -134,7 +131,7 @@ const AdminOrders = () => {
 
         {/* Filters */}
         <div className="rounded-xl shadow-sm p-6 mb-6" style={{ backgroundColor: '#fff' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Status Filter */}
             <select
               value={filters.status}
@@ -187,32 +184,12 @@ const AdminOrders = () => {
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>
             </select>
-
-            {/* Search */}
-            <div className="relative">
-              <FaSearch
-                className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                style={{ color: '#999' }}
-              />
-              <input
-                type="text"
-                placeholder="Search by Order ID..."
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-                className="w-full pl-10 pr-4 py-2 rounded-lg transition-all duration-300 focus:outline-none"
-                style={{
-                  backgroundColor: '#f8f7f6',
-                  color: '#3B2F2F',
-                  border: 'none',
-                }}
-              />
-            </div>
           </div>
         </div>
 
         {/* Orders Table */}
         <div className="rounded-xl shadow-sm overflow-hidden" style={{ backgroundColor: '#fff' }}>
-          {loading ? (
+          {loading ?  (
             <div className="text-center py-12">
               <div
                 className="animate-spin rounded-full h-12 w-12 border-b-4 mx-auto"
@@ -250,16 +227,14 @@ const AdminOrders = () => {
                       <th className="text-left py-4 px-6 font-semibold" style={{ color: '#3B2F2F' }}>
                         Date
                       </th>
-                      <th className="text-left py-4 px-6 font-semibold" style={{ color: '#3B2F2F' }}>
-                        Action
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {orders.map((order) => (
                       <tr
                         key={order._id}
-                        className="hover:shadow-sm transition-all duration-200"
+                        className="hover:shadow-sm transition-all duration-200 cursor-pointer"
+                        onClick={() => navigate(`/admin/orders/${order._id}`)}
                         style={{
                           backgroundColor: '#fff',
                           borderBottom: '1px solid #f0eeec',
@@ -279,7 +254,7 @@ const AdminOrders = () => {
                           </div>
                         </td>
                         <td className="py-4 px-6" style={{ color: '#3B2F2F' }}>
-                          {order.items.length}
+                          {order.items. length}
                         </td>
                         <td className="py-4 px-6 font-bold" style={{ color: '#3B2F2F' }}>
                           ₹{order.totalAmount.toFixed(2)}
@@ -287,7 +262,11 @@ const AdminOrders = () => {
                         <td className="py-4 px-6">
                           <select
                             value={order.status}
-                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleStatusChange(order._id, e.target.value);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold focus:outline-none transition-all duration-300"
                             style={{
                               backgroundColor: getStatusColor(order.status).bg,
@@ -306,16 +285,6 @@ const AdminOrders = () => {
                         <td className="py-4 px-6 text-sm" style={{ color: '#666' }}>
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="py-4 px-6">
-                          <button
-                            onClick={() => navigate(`/admin/orders/${order._id}`)}
-                            className="p-2 rounded-lg transition-all duration-300 hover:scale-110"
-                            style={{ backgroundColor: '#f8f7f6', color: '#3B2F2F' }}
-                            title="View Details"
-                          >
-                            <FaEye className="text-lg" />
-                          </button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -333,14 +302,14 @@ const AdminOrders = () => {
                 <div className="flex gap-2 items-center">
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    disabled={pagination.currentPage === 1}
+                    disabled={pagination. currentPage === 1}
                     className="p-2 rounded-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#f8f7f6', color: '#3B2F2F' }}
                   >
                     <FaChevronLeft />
                   </button>
                   <span style={{ color: '#666', padding: '0 8px' }}>
-                    Page {pagination.currentPage} of {pagination.totalPages}
+                    Page {pagination.currentPage} of {pagination. totalPages}
                   </span>
                   <button
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
