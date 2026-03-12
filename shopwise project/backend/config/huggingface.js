@@ -51,7 +51,7 @@ async function getRealTimePrice(modelName) {
     const product = PHONE_DB.find(p => p.name.toLowerCase().includes(modelName.toLowerCase()));
     if (product) return `Current price of ${product.name} is approx ₹${product.price}`;
     // AI fallback
-    return await LLM(`Give estimated India price for ${modelName}`);
+    return await LLM(`Give estimated India price for ${modelName}`, `I cannot find the price for ${modelName} in our current catalog.`);
   } catch {
     return "Couldn't fetch live price, try again.";
   }
@@ -65,7 +65,7 @@ async function getSpecs(modelName) {
   if (phone) {
     return `📱 **${phone.name} Specs**\nCamera: ${phone.camera}\nBattery: ${phone.battery}\nProcessor: ${phone.chip}\nPrice: ₹${phone.price}`;
   }
-  return await LLM(`Give full phone specs of ${modelName} in clean bullet points`);
+  return await LLM(`Give full phone specs of ${modelName} in clean bullet points`, `I don't have the exact specs for ${modelName} right now.`);
 }
 
 // -----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ async function comparePhones(a, b) {
 👉 Conclusion: ${pa.price < pb.price ? pa.name : pb.name} offers better value.`;
   }
 
-  return await LLM(`Compare ${a} and ${b} in a detailed way`);
+  return await LLM(`Compare ${a} and ${b} in a detailed way`, `I can only compare phones in our catalog right now.`);
 }
 
 // -----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ async function RAGSearch(query) {
 // -----------------------------------------------------------------------------
 // HUGGINGFACE LLM WRAPPER
 // -----------------------------------------------------------------------------
-async function LLM(prompt) {
+async function LLM(prompt, fallback = "I'm having trouble thinking of a response right now. Please try again later.") {
   const memory = getMemoryText();
 
   const finalPrompt = `You are ShopWise AI. Answer like a professional.
@@ -131,8 +131,13 @@ ${memory}
 User Query: ${prompt}
 Answer:`;
 
-  const res = await hf.textGeneration({ model: "gpt2", inputs: finalPrompt, parameters: { max_new_tokens: 180 } });
-  return res.generated_text.replace(finalPrompt, "").trim();
+  try {
+    const res = await hf.textGeneration({ model: "Qwen/Qwen2.5-1.5B-Instruct", inputs: finalPrompt, parameters: { max_new_tokens: 180 } });
+    return res.generated_text.replace(finalPrompt, "").trim();
+  } catch (err) {
+    console.error("LLM Generation Error:", err.message);
+    return fallback;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -168,12 +173,13 @@ export const generateChatResponse = async (msg) => {
 
     // RAG Hybrid Search
     const ragText = await RAGSearch(msg);
-    const final = await LLM(`Use this context: ${ragText} and answer: ${msg}`);
+    const final = await LLM(`Use this context: ${ragText} and answer: ${msg}`, `Based on our data: ${ragText}`);
 
     addToMemory(msg, final);
     return { success: true, message: final };
 
   } catch (err) {
+    console.error('❌ HuggingFace Error:', err);
     return { success: false, message: "Something went wrong.", error: err.message };
   }
 };

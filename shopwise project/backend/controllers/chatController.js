@@ -83,40 +83,17 @@ export const sendMessage = async (req, res) => {
       parts: [{ text: msg.content }],
     }));
 
-    // Check if asking about products
-    const isProductQuery = /recommend|suggest|find|looking for|need|want|buy|show me|product/i.test(message);
-    
     let aiResponse;
+
+    console.log('💬 Processing chat query via HuggingFace');
+    const response = await generateChatResponse(message, conversationHistory);
     
-    if (isProductQuery) {
-      console.log('🛍️ Product query detected');
-      
-      try {
-        const products = await Product.find().limit(20);
-        console.log('📦 Found', products.length, 'products in database');
-        
-        if (products.length > 0) {
-          const recResponse = await generateProductRecommendations(message, products);
-          aiResponse = recResponse.recommendations || recResponse.message;
-        } else {
-          // No products in database
-          aiResponse = "I'd love to help you find products! However, our product catalog is currently being updated. Please browse our Products page or contact support@shopwise.com for assistance.";
-        }
-      } catch (productError) {
-        console.error('❌ Product query error:', productError);
-        aiResponse = "I'm having trouble accessing our product catalog right now. Please check our Products page or try again later.";
-      }
-    } else {
-      console.log('💬 General chat query');
-      const response = await generateChatResponse(message, conversationHistory);
-      
-      console.log('🔍 Gemini Response Details:');
-      console.log('Success:', response.success);
-      console.log('Has message:', !!response.message);
-      console.log('Error:', response.error);
-      
-      aiResponse = response.message;
-    }
+    console.log('🔍 AI Response Details:');
+    console.log('Success:', response.success);
+    console.log('Has message:', !!response.message);
+    console.log('Error:', response.error);
+    
+    aiResponse = response.message || "I'm having trouble connecting right now.";
 
     // Add AI response to session
     session.messages.push({
