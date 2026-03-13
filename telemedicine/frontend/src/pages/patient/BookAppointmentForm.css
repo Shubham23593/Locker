@@ -1,0 +1,36 @@
+.book-appt { max-width: 672px; margin: 0 auto; }
+.book-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border: 1px solid #e5e7eb; padding: 24px; }
+.book-card h2 { font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+.book-subtitle { font-size: 0.875rem; color: #6b7280; margin-bottom: 24px; }
+.book-error { margin-bottom: 16px; padding: 12px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 8px; font-size: 0.875rem; }
+.book-form { display: flex; flex-direction: column; gap: 20px; }
+.book-label { display: block; font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 8px; }
+.book-label-small { display: block; font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 4px; }
+.date-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.date-btn { padding: 12px 8px; border-radius: 8px; border: 2px solid #e5e7eb; background: #fff; color: #4b5563; text-align: center; transition: all 0.2s; }
+.date-btn:hover { background: #f9fafb; }
+.date-btn--active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+.date-btn .date-label { font-weight: 600; font-size: 0.875rem; }
+.date-btn .date-display { font-size: 0.75rem; opacity: 0.7; margin-top: 2px; }
+.timeslot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (min-width: 640px) { .timeslot-grid { grid-template-columns: repeat(6, 1fr); } }
+.slot-btn { padding: 8px 4px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; font-size: 0.75rem; font-weight: 500; color: #4b5563; transition: all 0.2s; }
+.slot-btn:hover { background: #f9fafb; }
+.slot-btn--active { background: #2563eb; border-color: #2563eb; color: #fff; }
+.book-select { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 1rem; outline: none; background: #fff; transition: border-color 0.2s; }
+.book-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+.mode-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mode-btn-2 { padding: 12px; border-radius: 8px; border: 2px solid #e5e7eb; background: #fff; color: #4b5563; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+.mode-btn-2:hover { background: #f9fafb; }
+.mode-btn-2--active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+.book-textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 1rem; outline: none; resize: none; transition: border-color 0.2s; }
+.book-textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+.book-btn-primary { width: 100%; background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-size: 1rem; font-weight: 500; transition: background 0.2s; }
+.book-btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+.book-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.book-success { text-align: center; padding: 40px 0; }
+.book-success .success-icon { font-size: 4rem; margin-bottom: 16px; }
+.book-success h3 { font-size: 1.25rem; font-weight: 700; color: #15803d; margin-bottom: 8px; }
+.book-success p { color: #6b7280; margin-bottom: 4px; }
+.book-btn-secondary { margin-top: 24px; background: #e5e7eb; color: #1f2937; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1rem; font-weight: 500; transition: background 0.2s; }
+.book-btn-secondary:hover { background: #d1d5db; }

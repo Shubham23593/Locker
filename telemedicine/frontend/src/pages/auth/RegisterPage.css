@@ -1,0 +1,106 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+  padding: 32px 16px;
+}
+
+.register-container { width: 100%; max-width: 448px; }
+
+.register-header { text-align: center; margin-bottom: 32px; }
+.register-header .logo-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+.register-header h1 { font-size: 1.5rem; font-weight: 700; color: #1f2937; }
+.register-header p { color: #6b7280; font-size: 0.875rem; margin-top: 4px; }
+
+.register-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.register-card h2 { font-size: 1.25rem; font-weight: 600; color: #374151; margin-bottom: 24px; }
+
+.register-error {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.register-form { display: flex; flex-direction: column; gap: 16px; }
+
+.rform-group { display: flex; flex-direction: column; }
+.rform-label { font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 4px; }
+.rform-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.rform-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+.role-label { font-size: 0.875rem; font-weight: 500; color: #4b5563; margin-bottom: 8px; }
+.role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.role-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  transition: all 0.2s;
+}
+.role-btn:hover { background: #f9fafb; }
+.role-btn--active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+.role-section--doctor {
+  padding: 16px;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.role-section--doctor h3 { font-size: 0.875rem; font-weight: 600; color: #1d4ed8; }
+
+.role-section--patient {
+  padding: 16px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.role-section--patient h3 { font-size: 0.875rem; font-weight: 600; color: #15803d; }
+
+.rbtn-primary {
+  width: 100%;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.rbtn-primary:hover:not(:disabled) { background: #1d4ed8; }
+.rbtn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.register-footer { text-align: center; font-size: 0.875rem; color: #6b7280; margin-top: 16px; }
+.register-footer a { color: #2563eb; font-weight: 500; }
+.register-footer a:hover { text-decoration: underline; }
