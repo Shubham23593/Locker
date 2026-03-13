@@ -37,7 +37,8 @@ const getAllUsers = async (req, res) => {
 const getSimulation = async (req, res) => {
   try {
     const patientCount = parseInt(req.query.patientCount, 10) || 20;
-    const emergencyRate = parseFloat(req.query.emergencyRate) || 0.3;
+    const emergencyRateRaw = parseFloat(req.query.emergencyRate);
+    const emergencyRate = emergencyRateRaw > 1 ? emergencyRateRaw / 100 : (emergencyRateRaw || 0.3);
 
     const patients = [];
     for (let i = 0; i < patientCount; i++) {
@@ -87,11 +88,13 @@ const getSimulation = async (req, res) => {
       fifo: {
         avgWaitTime: Math.round(fifoTotalWait / patientCount),
         maxWaitTime: fifoMaxWait,
+        throughput: patientCount,
         results: fifoResults,
       },
       optimized: {
         avgWaitTime: Math.round(optTotalWait / patientCount),
         maxWaitTime: optMaxWait,
+        throughput: patientCount,
         results: optimizedResults,
       },
     });

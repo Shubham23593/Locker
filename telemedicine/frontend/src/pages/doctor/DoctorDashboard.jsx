@@ -99,7 +99,7 @@ export default function DoctorDashboard() {
       const { data } = await api.put('/doctor/toggle-status');
       setDoctor((prev) => ({
         ...prev,
-        isActive: data.isActive ?? !prev?.isActive,
+        isOnline: data.isOnline ?? !prev?.isOnline,
       }));
     } catch {
       /* ignore */
@@ -132,7 +132,7 @@ export default function DoctorDashboard() {
     }
   };
 
-  const isActive = doctor?.isActive ?? false;
+  const isActive = doctor?.isOnline ?? false;
   const currentPatient = inProgress || queue.find((c) => c.status === 'waiting');
   const nextPatient = queue.find(
     (c) => c !== currentPatient && c.status === 'waiting'

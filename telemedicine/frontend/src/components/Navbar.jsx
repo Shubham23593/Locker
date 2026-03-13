@@ -4,16 +4,17 @@ import './Navbar.css';
 
 const NAV_LINKS = {
   patient: [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/queue/join', label: 'Join Queue' },
-    { to: '/appointments/book', label: 'Book Appointment' },
+    { to: '/patient/dashboard', label: 'Dashboard' },
+    { to: '/patient/join-queue', label: 'Join Queue' },
+    { to: '/patient/schedule', label: 'Book Appointment' },
   ],
   doctor: [
-    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/doctor/dashboard', label: 'Dashboard' },
   ],
   admin: [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/analytics', label: 'Analytics' },
+    { to: '/admin/dashboard', label: 'Dashboard' },
+    { to: '/admin/analytics', label: 'Analytics' },
+    { to: '/admin/simulation', label: 'Simulation' },
   ],
 };
 

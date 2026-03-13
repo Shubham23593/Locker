@@ -193,8 +193,9 @@ const getQueueStatus = async (req, res) => {
   try {
     const consultations = await Consultation.find({
       patientId: req.user.id,
-      status: { $in: ['waiting', 'in-progress'] },
-    }).populate('doctorId', 'name email');
+    })
+      .populate('doctorId', 'name email')
+      .sort({ createdAt: -1 });
 
     res.json(consultations);
   } catch (err) {
@@ -376,10 +377,32 @@ const predictSpecializationProxy = async (req, res) => {
   }
 };
 
+const getConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const consultation = await Consultation.findById(id)
+      .populate('doctorId', 'name email')
+      .populate('patientId', 'name email');
+
+    if (!consultation) {
+      return res.status(404).json({ message: 'Consultation not found' });
+    }
+
+    const result = consultation.toObject();
+    result.doctor = result.doctorId;
+    result.patient = result.patientId;
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
   joinQueue,
   scheduleAppointment,
   getQueueStatus,
+  getConsultation,
   startSession,
   endSession,
   getQueue,

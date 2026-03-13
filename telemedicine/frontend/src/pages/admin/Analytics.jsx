@@ -52,7 +52,7 @@ export default function Analytics() {
   const maxWait = metrics.maxWaitTime ?? 0;
   const idleCount = metrics.doctorIdleCount ?? metrics.idleDoctors ?? 0;
   const totalPatients = metrics.totalPatients ?? 0;
-  const completed = metrics.completedConsultations ?? metrics.completed ?? 0;
+  const completed = metrics.totalCompleted ?? metrics.completedConsultations ?? metrics.completed ?? 0;
 
   // Bar chart – avg wait time by doctor or period
   const barLabels =

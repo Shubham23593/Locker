@@ -24,9 +24,18 @@ export default function AdminDashboard() {
         totalPatients: data.totalPatients ?? 0,
         totalDoctors: data.totalDoctors ?? 0,
         activeConsultations: data.activeConsultations ?? 0,
-        onlineDoctors: data.onlineDoctors ?? 0,
+        onlineDoctors: Array.isArray(data.onlineDoctors) ? data.onlineDoctors.length : (data.onlineDoctors ?? 0),
       });
-      if (data.doctors) setDoctors(data.doctors);
+      if (data.onlineDoctors && Array.isArray(data.onlineDoctors)) {
+        setDoctors(data.onlineDoctors.map((d) => ({
+          _id: d._id,
+          name: d.userId?.name || d.name || '—',
+          specialization: d.specialization,
+          isOnline: d.isOnline,
+        })));
+      } else if (data.doctors) {
+        setDoctors(data.doctors);
+      }
       if (data.alerts) setAlerts(data.alerts);
     } catch {
       /* ignore */

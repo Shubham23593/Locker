@@ -7,6 +7,7 @@ router.post('/join', auth, queueController.joinQueue);
 router.post('/schedule', auth, queueController.scheduleAppointment);
 router.post('/predict-specialization', auth, queueController.predictSpecializationProxy);
 router.get('/status', auth, queueController.getQueueStatus);
+router.get('/consultation/:id', auth, queueController.getConsultation);
 router.put('/start/:id', auth, authorize('doctor'), queueController.startSession);
 router.put('/end/:id', auth, authorize('doctor'), queueController.endSession);
 router.get('/doctor', auth, authorize('doctor'), queueController.getQueue);

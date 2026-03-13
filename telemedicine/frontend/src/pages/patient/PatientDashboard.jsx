@@ -89,7 +89,7 @@ export default function PatientDashboard() {
                 <div className="pd-queue-info">
                   <p>
                     <strong>Doctor:</strong>{' '}
-                    {c.doctor?.name || c.doctorName || 'Assigning…'}
+                    {c.doctorId?.name || c.doctor?.name || c.doctorName || 'Assigning…'}
                   </p>
                   <span className={`pd-badge ${statusClass(c.status)}`}>
                     {c.status}
@@ -127,9 +127,9 @@ export default function PatientDashboard() {
                         ? new Date(c.createdAt).toLocaleDateString()
                         : '—'}
                     </td>
-                    <td>{c.doctor?.name || c.doctorName || '—'}</td>
+                    <td>{c.doctorId?.name || c.doctor?.name || c.doctorName || '—'}</td>
                     <td className="pd-symptoms">{c.symptoms || '—'}</td>
-                    <td>{c.duration ? `${c.duration} min` : '—'}</td>
+                    <td>{c.actualDuration ? `${c.actualDuration} min` : (c.duration ? `${c.duration} min` : '—')}</td>
                     <td>
                       <span className={`pd-badge ${statusClass(c.status)}`}>
                         {c.status}
