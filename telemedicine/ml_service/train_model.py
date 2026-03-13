@@ -30,7 +30,7 @@ def generate_synthetic_data(n_samples: int = N_SAMPLES) -> pd.DataFrame:
         10
         + emergency_level * 3
         + previous_visits * 2
-        + (age > 60).astype(float) * 5
+        + np.where(age > 60, 5, 0)
         + visit_type_numeric * 3
         + specialization_numeric * 0.5
     )
