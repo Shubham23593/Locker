@@ -6,6 +6,7 @@ import JoinQueueForm from './JoinQueueForm'
 import BookAppointmentForm from './BookAppointmentForm'
 import PatientQueueStatus from './PatientQueueStatus'
 import NotificationBar from '../../components/NotificationBar'
+import './PatientDashboard.css'
 
 const NAV_ITEMS = [
   { path: '', label: '🏥 Join Queue', end: true },
@@ -26,44 +27,34 @@ function HistoryPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading history...</div>
-  if (error) return <div className="text-center py-12 text-red-500">{error}</div>
+  if (loading) return <div className="history-loading">Loading history...</div>
+  if (error) return <div className="history-error">{error}</div>
 
   if (records.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <div className="text-5xl mb-3">📋</div>
-        <p className="text-lg font-medium">No consultation history yet</p>
-        <p className="text-sm mt-1">Your past consultations will appear here</p>
+      <div className="history-empty">
+        <div className="empty-icon">📋</div>
+        <h3>No consultation history yet</h3>
+        <p>Your past consultations will appear here</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="history-list">
       {records.map((rec, i) => (
-        <div key={rec._id || i} className="card">
-          <div className="flex justify-between items-start flex-wrap gap-2">
+        <div key={rec._id || i} className="history-card">
+          <div className="history-card-inner">
             <div>
-              <p className="font-semibold text-gray-800">
-                Dr. {rec.doctor?.name || 'N/A'} — {rec.doctor?.specialization || ''}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {rec.symptoms || rec.chiefComplaint || 'No symptoms recorded'}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Mode: {rec.consultationMode} | Duration: {rec.duration || 'N/A'} min
-              </p>
+              <p className="history-card-doctor">Dr. {rec.doctor?.name || 'N/A'} — {rec.doctor?.specialization || ''}</p>
+              <p className="history-card-symptoms">{rec.symptoms || rec.chiefComplaint || 'No symptoms recorded'}</p>
+              <p className="history-card-meta">Mode: {rec.consultationMode} | Duration: {rec.duration || 'N/A'} min</p>
             </div>
-            <div className="text-right">
-              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                rec.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-              }`}>
+            <div>
+              <span className={rec.status === 'completed' ? 'history-status-completed' : 'history-status-other'}>
                 {rec.status || 'completed'}
               </span>
-              <p className="text-xs text-gray-400 mt-1">
-                {rec.createdAt ? new Date(rec.createdAt).toLocaleDateString() : ''}
-              </p>
+              <p className="history-date">{rec.createdAt ? new Date(rec.createdAt).toLocaleDateString() : ''}</p>
             </div>
           </div>
         </div>
@@ -82,42 +73,32 @@ export default function PatientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="patient-dash">
       <NotificationBar />
-
-      {/* Top Nav */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🏥</span>
+      <header className="patient-header">
+        <div className="patient-header-inner">
+          <div className="patient-brand">
+            <span className="brand-icon">🏥</span>
             <div>
-              <h1 className="text-lg font-bold text-gray-800 leading-tight">Telemedicine</h1>
-              <p className="text-xs text-gray-500">Patient Portal</p>
+              <h1>Telemedicine</h1>
+              <p>Patient Portal</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 hidden sm:block">
-              👤 {user?.name || 'Patient'}
-            </span>
-            <button onClick={handleLogout} className="btn-secondary text-sm px-3 py-1.5">
-              Logout
-            </button>
+          <div className="patient-header-actions">
+            <span className="patient-user">👤 {user?.name || 'Patient'}</span>
+            <button onClick={handleLogout} className="pdash-btn-secondary">Logout</button>
           </div>
         </div>
       </header>
-
-      {/* Tab Navigation */}
-      <div className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4">
-          <nav className="flex gap-1 overflow-x-auto">
+      <div className="patient-nav-bar">
+        <div className="patient-nav-inner">
+          <nav className="patient-nav">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.path}
                 to={`/patient/${item.path}`}
                 end={item.end}
-                className={({ isActive }) =>
-                  `tab-btn whitespace-nowrap py-3 ${isActive ? 'tab-active' : 'tab-inactive'}`
-                }
+                className={({ isActive }) => isActive ? 'patient-nav-link active' : 'patient-nav-link'}
               >
                 {item.label}
               </NavLink>
@@ -125,9 +106,7 @@ export default function PatientDashboard() {
           </nav>
         </div>
       </div>
-
-      {/* Content */}
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="patient-content">
         <Routes>
           <Route index element={<JoinQueueForm />} />
           <Route path="book" element={<BookAppointmentForm />} />
