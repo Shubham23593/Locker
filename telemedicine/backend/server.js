@@ -4,6 +4,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/authRoutes.js';
 import consultationRoutes from './routes/consultationRoutes.js';
@@ -25,12 +26,29 @@ export const io = new Server(server, {
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/patient', consultationRoutes);
-app.use('/api/doctor', doctorRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/consultation', consultationRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/patient', apiLimiter, consultationRoutes);
+app.use('/api/doctor', apiLimiter, doctorRoutes);
+app.use('/api/admin', apiLimiter, adminRoutes);
+app.use('/api/consultation', apiLimiter, consultationRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
