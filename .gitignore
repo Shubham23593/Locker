@@ -8,3 +8,4 @@ build/
 .DS_Store
 *.pkl
 *.joblib
+package-lock.json
