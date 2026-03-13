@@ -1,0 +1,99 @@
+.an-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.an-loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+.an-title {
+  margin: 0 0 24px;
+  font-size: 1.6rem;
+  color: #1f2937;
+}
+
+/* ── Metric Cards ──────────────────────────────────────── */
+.an-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.an-metric-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 18px 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-top: 4px solid #4f46e5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.an-metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.an-metric-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ── Charts Grid ───────────────────────────────────────── */
+.an-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.an-chart-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  height: 340px;
+}
+
+.an-chart-pie {
+  height: 340px;
+}
+
+.an-chart-wide {
+  grid-column: 1 / -1;
+  height: 320px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .an-metrics-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .an-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .an-chart-wide {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .an-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .an-chart-container {
+    height: 280px;
+  }
+}
