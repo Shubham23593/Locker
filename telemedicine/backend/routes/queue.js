@@ -5,6 +5,7 @@ const queueController = require('../controllers/queueController');
 
 router.post('/join', auth, queueController.joinQueue);
 router.post('/schedule', auth, queueController.scheduleAppointment);
+router.post('/predict-specialization', auth, queueController.predictSpecializationProxy);
 router.get('/status', auth, queueController.getQueueStatus);
 router.put('/start/:id', auth, authorize('doctor'), queueController.startSession);
 router.put('/end/:id', auth, authorize('doctor'), queueController.endSession);

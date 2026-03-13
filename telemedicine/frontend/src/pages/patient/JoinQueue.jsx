@@ -36,7 +36,7 @@ export default function JoinQueue() {
   const predictSpecialization = async () => {
     if (!form.symptoms.trim()) return;
     try {
-      const { data } = await api.post('/predict-specialization', {
+      const { data } = await api.post('/queue/predict-specialization', {
         symptoms: form.symptoms,
       });
       setPredictedCategory(data.category || data.specialization || '');
@@ -78,7 +78,7 @@ export default function JoinQueue() {
     };
 
     if (form.visitType === 'Follow-up') {
-      payload.previousVisitCount = Number(form.previousVisitCount);
+      payload.previousVisits = Number(form.previousVisitCount);
     }
 
     if (form.doctorSelection === 'custom' && form.selectedDoctor) {
@@ -249,8 +249,8 @@ export default function JoinQueue() {
             >
               <option value="" disabled>Choose a doctor</option>
               {doctors.map((doc) => (
-                <option key={doc._id} value={doc._id}>
-                  {doc.name} — {doc.specialization}
+                <option key={doc._id} value={doc.userId?._id || doc._id}>
+                  {doc.userId?.name || doc.name} — {doc.specialization}
                 </option>
               ))}
             </select>

@@ -204,10 +204,10 @@ const getQueueStatus = async (req, res) => {
 
 const startSession = async (req, res) => {
   try {
-    const { consultationId } = req.params;
+    const { id } = req.params;
     const io = req.app.get('io');
 
-    const consultation = await Consultation.findById(consultationId);
+    const consultation = await Consultation.findById(id);
     if (!consultation) {
       return res.status(404).json({ message: 'Consultation not found' });
     }
@@ -233,10 +233,10 @@ const startSession = async (req, res) => {
 
 const endSession = async (req, res) => {
   try {
-    const { consultationId } = req.params;
+    const { id } = req.params;
     const io = req.app.get('io');
 
-    const consultation = await Consultation.findById(consultationId);
+    const consultation = await Consultation.findById(id);
     if (!consultation) {
       return res.status(404).json({ message: 'Consultation not found' });
     }
@@ -366,6 +366,16 @@ const getMetrics = async (req, res) => {
   }
 };
 
+const predictSpecializationProxy = async (req, res) => {
+  try {
+    const { symptoms } = req.body;
+    const specialization = await mlService.predictSpecialization(symptoms);
+    res.json({ specialization });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
   joinQueue,
   scheduleAppointment,
@@ -375,4 +385,5 @@ module.exports = {
   getQueue,
   getGlobalQueue,
   getMetrics,
+  predictSpecializationProxy,
 };
