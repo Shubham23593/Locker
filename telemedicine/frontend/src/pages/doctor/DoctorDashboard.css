@@ -1,0 +1,388 @@
+.dd-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.dd-loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+/* Header */
+.dd-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.dd-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #1f2937;
+}
+
+.dd-welcome {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* ── Status Toggle ─────────────────────────────────────── */
+.dd-status-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.dd-status-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.dd-toggle {
+  position: relative;
+  width: 64px;
+  height: 34px;
+  border-radius: 34px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  outline: none;
+  padding: 0;
+}
+
+.dd-toggle-active {
+  background: #22c55e;
+}
+
+.dd-toggle-inactive {
+  background: #ef4444;
+}
+
+.dd-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.dd-toggle-active .dd-toggle-knob {
+  transform: translateX(30px);
+}
+
+.dd-status-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.dd-text-active {
+  color: #16a34a;
+}
+
+.dd-text-inactive {
+  color: #dc2626;
+}
+
+.dd-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dd-dot-active {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.dd-dot-inactive {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+/* ── Session Area ──────────────────────────────────────── */
+.dd-session {
+  margin-bottom: 24px;
+}
+
+.dd-section-title {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  color: #1f2937;
+}
+
+.dd-session-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  border-left: 5px solid #4f46e5;
+}
+
+.dd-session-patient {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dd-session-symptoms {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Timer */
+.dd-timer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #1f2937;
+  min-width: 110px;
+  text-align: center;
+}
+
+.dd-timer-exceeded {
+  color: #dc2626;
+  animation: timerPulse 1.5s infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.dd-predicted {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Buttons */
+.dd-btn {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.dd-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dd-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.dd-btn-start {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.dd-btn-start:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.dd-btn-end {
+  background: #ef4444;
+  color: #fff;
+}
+
+.dd-btn-end:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+/* ── Queue Section ─────────────────────────────────────── */
+.dd-queue-section {
+  margin-bottom: 24px;
+}
+
+.dd-queue-count {
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.dd-empty {
+  text-align: center;
+  padding: 32px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.dd-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dd-queue-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+
+.dd-queue-card:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+}
+
+.dd-queue-current {
+  border-left: 4px solid #4f46e5;
+  background: #f5f3ff;
+}
+
+.dd-queue-rank {
+  width: 32px;
+  height: 32px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.dd-queue-current .dd-queue-rank {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.dd-queue-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dd-queue-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.dd-queue-symptoms {
+  font-size: 0.82rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dd-emergency-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dd-queue-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.dd-meta-item {
+  white-space: nowrap;
+}
+
+.dd-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dd-badge-waiting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dd-badge-in-progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dd-badge-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Next hint */
+.dd-next-hint {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 0.9rem;
+  color: #166534;
+  margin-bottom: 24px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .dd-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dd-status-section {
+    flex-wrap: wrap;
+  }
+
+  .dd-session-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .dd-timer {
+    font-size: 2.5rem;
+  }
+
+  .dd-queue-card {
+    flex-wrap: wrap;
+  }
+
+  .dd-queue-meta {
+    width: 100%;
+    justify-content: space-around;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+  }
+}

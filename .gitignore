@@ -1,0 +1,11 @@
+node_modules/
+__pycache__/
+*.pyc
+.env
+dist/
+build/
+*.log
+.DS_Store
+*.pkl
+*.joblib
+package-lock.json
